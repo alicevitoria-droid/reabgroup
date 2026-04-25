@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAB GRUPE - Sistema de Gestão Hospitalar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        :root { --reab-purple: #4c1d95; --upe-red: #cc0000; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .sidebar { background: linear-gradient(180deg, #1e1b4b 0%, #2e1065 100%); }
+        .glass-panel { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden; }
+        .input-field { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 8px 12px; width: 100%; font-size: 0.875rem; transition: all 0.2s; }
+        .input-field:focus { border-color: var(--reab-purple); outline: none; box-shadow: 0 0 0 3px rgba(76, 29, 149, 0.12); }
+        .sidebar-btn { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-size: 0.875rem; width: 100%; color: #cbd5e1; transition: all 0.2s; }
+        .sidebar-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .active-tab { background: white !important; color: #1e1b4b !important; font-weight: 600; }
+        .section-title { border-left: 4px solid var(--upe-red); padding-left: 10px; font-weight: 700; color: #334155; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; text-align: left; padding: 8px; font-size: 0.7rem; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 6px; border-bottom: 1px solid #f1f5f9; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 sidebar p-6 flex flex-col text-white">
+        <div class="mb-10 text-center">
+            <div class="bg-white p-2 rounded-xl mb-3 inline-block">
+                <img src="https://lh3.googleusercontent.com/d/1X_mDqA7f_V5TzX0g_v_uX6L4j_m9mP_k" alt="Logo" class="h-12 w-auto">
+            </div>
+            <h1 class="text-lg font-bold">REAB GRUPE</h1>
+            <p class="text-[9px] text-purple-300">UPE - PETROLINA</p>
+        </div>
+
+        <nav class="space-y-1 flex-1">
+            <button onclick="switchTab('pacientes')" id="btn-pacientes" class="sidebar-btn active-tab"><i class="fas fa-id-card"></i> Prontuários</button>
+            <button onclick="switchTab('avaliacao')" id="btn-avaliacao" class="sidebar-btn"><i class="fas fa-file-medical"></i> Avaliação Inicial</button>
+            <button onclick="switchTab('evolucao')" id="btn-evolucao" class="sidebar-btn"><i class="fas fa-notes-medical"></i> Evolução Diária</button>
+        </nav>
+
+        <div id="auth-status" class="mt-auto p-3 bg-white/5 rounded-lg text-[10px] flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div> Sincronizando...
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8">
+        
+        <!-- ABA: LISTA DE PACIENTES -->
+        <section id="tab-pacientes" class="tab-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Gestão de Pacientes</h2>
+                <button onclick="openModal('modal-paciente')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg"><i class="fas fa-plus mr-2"></i>Novo Cadastro</button>
+            </div>
+            <div id="grid-pacientes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Pacientes carregados via Firebase -->
+            </div>
+        </section>
+
+        <!-- ABA: AVALIAÇÃO INICIAL -->
+        <section id="tab-avaliacao" class="tab-content hidden">
+            <div class="glass-panel p-6 mb-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Avaliação Fisioterapêutica</h2>
+                    <select id="sel-pac-av" class="input-field w-64 border-indigo-200"></select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Bloco 1: Clínica -->
+                <div class="glass-panel p-6">
+                    <div class="section-title">Anamnese & Clínica</div>
+                    <div class="space-y-4">
+                        <div><label class="text-[10px] font-bold text-slate-400">HISTÓRIA CLÍNICA</label><textarea id="av-historia" class="input-field h-20"></textarea></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[10px] font-bold text-slate-400">NYHA</label><select id="av-nyha" class="input-field"><option>Classe I</option><option>Classe II</option><option>Classe III</option><option>Classe IV</option></select></div>
+                            <div><label class="text-[10px] font-bold text-slate-400">DIAGNÓSTICO ETIOLÓGICO</label><input type="text" id="av-etio" class="input-field"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco 2: Testes Funcionais -->
+                <div class="glass-panel p-6">
+                    <div class="section-title">Testes & Pontuações</div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div><label class="text-[10px] font-bold text-slate-400">TC6M (m)</label><input type="number" id="av-tc6m" class="input-field"></div>
+                        <div><label class="text-[10px] font-bold text-slate-400">PIAP (cmH2O)</label><input type="number" id="av-piap" class="input-field"></div>
+                        <div><label class="text-[10px] font-bold text-slate-400">SPP (Escore)</label><input type="number" id="av-spp" class="input-field" placeholder="Pontuação"></div>
+                    </div>
+                    <div class="mt-4"><label class="text-[10px] font-bold text-slate-400">MEDICAÇÕES EM USO</label><textarea id="av-meds" class="input-field h-16"></textarea></div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="salvarAvaliacao()" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl">Salvar Avaliação Inicial</button>
+            </div>
+        </section>
+
+        <!-- ABA: EVOLUÇÃO DIÁRIA -->
+        <section id="tab-evolucao" class="tab-content hidden">
+            <div class="glass-panel p-6 mb-6 flex justify-between items-center bg-slate-50">
+                <div class="w-1/3">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">Paciente em Atendimento</label>
+                    <select id="sel-pac-ev" class="input-field font-bold border-indigo-200"></select>
+                </div>
+                <div id="calculos-fc" class="flex gap-4">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Exercícios Resistidos -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="glass-panel p-6">
+                        <div class="section-title">Exercícios Resistidos</div>
+                        <table>
+                            <thead>
+                                <tr><th>Exercício</th><th>Carga (kg)</th><th>OMNI</th><th>Série/Rep</th></tr>
+                            </thead>
+                            <tbody id="lista-resistidos">
+                                <tr>
+                                    <td><input type="text" placeholder="Ex: Leg Press" class="input-field py-1"></td>
+                                    <td><input type="text" class="input-field py-1 w-16"></td>
+                                    <td><input type="number" class="input-field py-1 w-16"></td>
+                                    <td><input type="text" placeholder="3x10" class="input-field py-1 w-20"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Ex: Extensora" class="input-field py-1"></td>
+                                    <td><input type="text" class="input-field py-1 w-16"></td>
+                                    <td><input type="number" class="input-field py-1 w-16"></td>
+                                    <td><input type="text" placeholder="3x10" class="input-field py-1 w-20"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button onclick="addLinhaResistido()" class="mt-3 text-xs font-bold text-indigo-600 hover:underline">+ Adicionar Exercício</button>
+                    </div>
+
+                    <div class="glass-panel p-6">
+                        <div class="section-title">Exercícios Respiratórios</div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[10px] font-bold text-slate-400">TIPO / TÉCNICA</label><input type="text" id="ev-resp-tipo" class="input-field"></div>
+                            <div><label class="text-[10px] font-bold text-slate-400">CARGA / SÉRIES</label><input type="text" id="ev-resp-carga" class="input-field"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lado: Observações -->
+                <div class="glass-panel p-6 h-fit">
+                    <div class="section-title">Observações Finais</div>
+                    <textarea id="ev-obs" class="input-field h-40" placeholder="Apenas se houver intercorrências ou avisos importantes..."></textarea>
+                    <button onclick="salvarEvolucao()" class="w-full mt-6 bg-indigo-700 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-800 transition">Finalizar Atendimento</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modais -->
+    <div id="modal-paciente" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl p-8 shadow-2xl">
+            <h3 class="text-xl font-bold mb-6">Cadastrar Paciente</h3>
+            <div class="space-y-4">
+                <div><label class="text-xs font-bold text-slate-400">NOME COMPLETO</label><input type="text" id="p-nome" class="input-field"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-xs font-bold text-slate-400">IDADE</label><input type="number" id="p-idade" class="input-field"></div>
+                    <div><label class="text-xs font-bold text-slate-400">SEXO</label><select id="p-sexo" class="input-field"><option value="M">Masc</option><option value="F">Fem</option></select></div>
+                </div>
+                <div><label class="text-xs font-bold text-slate-400">PRONTUÁRIO Nº</label><input type="text" id="p-pront" class="input-field"></div>
+            </div>
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeModal('modal-paciente')" class="flex-1 bg-slate-100 py-3 rounded-lg font-bold">Cancelar</button>
+                <button onclick="apiCadastrarPaciente()" class="flex-1 bg-indigo-700 text-white py-3 rounded-lg font-bold">Salvar na Nuvem</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const firebaseEnabled = Boolean(firebaseConfig);
+        const app = firebaseEnabled ? initializeApp(firebaseConfig) : null;
+        const auth = firebaseEnabled ? getAuth(app) : null;
+        const db = firebaseEnabled ? getFirestore(app) : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'reab-v4-prod';
+
+        const LOCAL_STORAGE_KEY = 'reabgroup-state';
+        const state = {
+            pacientes: [],
+            avaliacoes: [],
+            atendimentos: [],
+            avaliacaoDraft: {},
+            evolucaoDraft: {},
+            novoPacienteDraft: {},
+            selectedPacAv: '',
+            selectedPacEv: ''
+        };
+            pacientes: [],
+            avaliacaoDraft: {},
+            evolucaoDraft: {},
+            novoPacienteDraft: {},
+            selectedPacAv: '',
+            selectedPacEv: ''
+        };
+
+        const saveState = () => {
+            try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state)); }
+            catch (err) { console.warn('Não foi possível salvar o estado local', err); }
+        };
+
+        const loadState = () => {
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (raw) Object.assign(state, JSON.parse(raw));
+            } catch (err) {
+                console.warn('Não foi possível ler o estado local', err);
+            }
+        };
+
+        const renderResistidosDraft = () => {
+            const body = document.getElementById('lista-resistidos');
+            if (!body) return;
+            const itens = state.evolucaoDraft.resistidos || [];
+            if (!itens.length) return;
+            body.innerHTML = itens.map(item => `
+                <tr>
+                    <td><input type="text" placeholder="Exercício" class="input-field py-1" value="${item.nome || ''}"></td>
+                    <td><input type="text" class="input-field py-1 w-16" value="${item.carga || ''}"></td>
+                    <td><input type="number" class="input-field py-1 w-16" value="${item.omni || ''}"></td>
+                    <td><input type="text" placeholder="3x10" class="input-field py-1 w-20" value="${item.serie || ''}"></td>
+                </tr>
+            `).join('');
+        };
+
+        const restoreDrafts = () => {
+            loadState();
+            if (state.pacientes.length) {
+                pacientes = state.pacientes;
+                renderPacientes();
+                updateSelects();
+            }
+
+            const fill = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value || '';
+            };
+
+            fill('p-nome', state.novoPacienteDraft.nome);
+            fill('p-idade', state.novoPacienteDraft.idade);
+            fill('p-sexo', state.novoPacienteDraft.sexo);
+            fill('p-pront', state.novoPacienteDraft.prontuario);
+
+            fill('sel-pac-av', state.selectedPacAv);
+            fill('av-historia', state.avaliacaoDraft.historia);
+            fill('av-nyha', state.avaliacaoDraft.nyha);
+            fill('av-etio', state.avaliacaoDraft.diagnosticoEtiologico);
+            fill('av-tc6m', state.avaliacaoDraft.tc6m);
+            fill('av-piap', state.avaliacaoDraft.piap);
+            fill('av-spp', state.avaliacaoDraft.spp);
+            fill('av-meds', state.avaliacaoDraft.medicacoes);
+
+            fill('sel-pac-ev', state.selectedPacEv);
+            fill('ev-resp-tipo', state.evolucaoDraft.respiratorio?.tipo);
+            fill('ev-resp-carga', state.evolucaoDraft.respiratorio?.carga);
+            fill('ev-obs', state.evolucaoDraft.observacoes);
+            renderResistidosDraft();
+        };
+
+        const saveDrafts = () => {
+            state.novoPacienteDraft = {
+                nome: document.getElementById('p-nome')?.value,
+                idade: document.getElementById('p-idade')?.value,
+                sexo: document.getElementById('p-sexo')?.value,
+                prontuario: document.getElementById('p-pront')?.value
+            };
+            state.selectedPacAv = document.getElementById('sel-pac-av')?.value || '';
+            state.avaliacaoDraft = {
+                historia: document.getElementById('av-historia')?.value,
+                nyha: document.getElementById('av-nyha')?.value,
+                diagnosticoEtiologico: document.getElementById('av-etio')?.value,
+                tc6m: document.getElementById('av-tc6m')?.value,
+                piap: document.getElementById('av-piap')?.value,
+                spp: document.getElementById('av-spp')?.value,
+                medicacoes: document.getElementById('av-meds')?.value
+            };
+            state.selectedPacEv = document.getElementById('sel-pac-ev')?.value || '';
+            state.evolucaoDraft = {
+                respiratorio: {
+                    tipo: document.getElementById('ev-resp-tipo')?.value,
+                    carga: document.getElementById('ev-resp-carga')?.value
+                },
+                observacoes: document.getElementById('ev-obs')?.value,
+                resistidos: Array.from(document.querySelectorAll('#lista-resistidos tr')).map(tr => {
+                    const inputs = tr.querySelectorAll('input');
+                    return {
+                        nome: inputs[0]?.value || '',
+                        carga: inputs[1]?.value || '',
+                        omni: inputs[2]?.value || '',
+                        serie: inputs[3]?.value || ''
+                    };
+                })
+            };
+            saveState();
+        };
+
+        let user = null;
+        let pacientes = [];
+
+        const init = async () => {
+            restoreDrafts();
+            const inputs = document.querySelectorAll('input.input-field, textarea.input-field');
+            inputs.forEach(el => el.addEventListener('input', saveDrafts));
+            const selects = document.querySelectorAll('select.input-field');
+            selects.forEach(el => el.addEventListener('change', saveDrafts));
+
+            if (firebaseEnabled) {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } else {
+                document.getElementById('auth-status').innerHTML = '<div class="w-2 h-2 rounded-full bg-slate-400"></div> Modo local apenas';
+            }
+        };
+        init();
+
+        if (firebaseEnabled) {
+            onAuthStateChanged(auth, (u) => {
+                if(u) {
+                    user = u;
+                    document.getElementById('auth-status').innerHTML = '<div class="w-2 h-2 rounded-full bg-green-500"></div> Sincronizado com Firestore';
+                    vincularDados();
+                }
+            });
+        }
+
+        function vincularDados() {
+            if (!firebaseEnabled) return;
+            const col = collection(db, 'artifacts', appId, 'public', 'data', 'pacientes');
+            onSnapshot(col, (snap) => {
+                const firebasePacientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const localOnly = state.pacientes.filter(local => !firebasePacientes.some(f => f.id === local.id));
+                pacientes = [...firebasePacientes, ...localOnly];
+                state.pacientes = pacientes;
+                saveState();
+                renderPacientes();
+                updateSelects();
+            });
+        }
+
+        window.apiCadastrarPaciente = async () => {
+            const data = {
+                nome: document.getElementById('p-nome').value,
+                idade: document.getElementById('p-idade').value,
+                sexo: document.getElementById('p-sexo').value,
+                prontuario: document.getElementById('p-pront').value,
+                timestamp: serverTimestamp()
+            };
+
+            const localPaciente = { id: 'local-' + Date.now(), ...data };
+            state.pacientes = [...state.pacientes.filter(p => p.id !== localPaciente.id), localPaciente];
+            saveState();
+            pacientes = state.pacientes;
+            renderPacientes();
+            updateSelects();
+
+            if (firebaseEnabled) {
+                try {
+                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'pacientes'), data);
+                    state.pacientes = state.pacientes.map(p => p.id === localPaciente.id ? { ...localPaciente, id: docRef.id } : p);
+                    saveState();
+                } catch (err) {
+                    console.warn('Falha ao salvar no Firebase, paciente mantido localmente', err);
+                }
+            }
+
+            closeModal('modal-paciente');
+        };
+
+        window.salvarAvaliacao = async () => {
+            const pacId = document.getElementById('sel-pac-av').value;
+            if (!pacId) return alert('Selecione um paciente.');
+
+            const data = {
+                pacienteId: pacId,
+                tipo: 'avaliacao',
+                historia: document.getElementById('av-historia').value,
+                nyha: document.getElementById('av-nyha').value,
+                diagnosticoEtiologico: document.getElementById('av-etio').value,
+                tc6m: document.getElementById('av-tc6m').value,
+                piap: document.getElementById('av-piap').value,
+                spp: document.getElementById('av-spp').value,
+                medicacoes: document.getElementById('av-meds').value,
+                data: serverTimestamp()
+            };
+
+            state.avaliacoes = [...state.avaliacoes, data];
+            saveState();
+
+            if (firebaseEnabled) {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'avaliacoes'), data);
+                alert('Avaliação inicial salva na nuvem!');
+            } else {
+                alert('Avaliação inicial salva localmente!');
+            }
+        };
+
+        window.salvarEvolucao = async () => {
+            const pacId = document.getElementById('sel-pac-ev').value;
+            if(!pacId) return alert("Selecione um paciente.");
+            
+            const resistidos = [];
+            document.querySelectorAll('#lista-resistidos tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                if(inputs[0].value) resistidos.push({
+                    nome: inputs[0].value, carga: inputs[1].value, omni: inputs[2].value, serie: inputs[3].value
+                });
+            });
+
+            const data = {
+                pacienteId: pacId,
+                tipo: 'evolução',
+                resistidos,
+                respiratorio: { 
+                    tipo: document.getElementById('ev-resp-tipo').value, 
+                    carga: document.getElementById('ev-resp-carga').value 
+                },
+                observacoes: document.getElementById('ev-obs').value,
+                data: serverTimestamp()
+            };
+
+            state.atendimentos = [...state.atendimentos, data];
+            saveState();
+
+            if (firebaseEnabled) {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'atendimentos'), data);
+                alert("Evolução salva na nuvem!");
+            } else {
+                alert("Evolução salva localmente!");
+            }
+        };
+
+        window.renderPacientes = () => {
+            const grid = document.getElementById('grid-pacientes');
+            grid.innerHTML = pacientes.map(p => `
+                <div class="glass-panel p-5 border-t-4 border-indigo-900">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-slate-800">${p.nome}</h4>
+                        <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded">PRONT. ${p.prontuario}</span>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-2">${p.idade} anos • ${p.sexo}</div>
+                    <button onclick="switchTab('evolucao'); document.getElementById('sel-pac-ev').value='${p.id}';" class="w-full mt-4 bg-slate-50 text-indigo-600 py-2 rounded text-[10px] font-bold border border-slate-100 hover:bg-indigo-50 transition">INICIAR ATENDIMENTO</button>
+                </div>
+            `).join('');
+        };
+
+        window.updateSelects = () => {
+            const opts = '<option value="">Selecione...</option>' + pacientes.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+            document.getElementById('sel-pac-av').innerHTML = opts;
+            document.getElementById('sel-pac-ev').innerHTML = opts;
+        };
+
+        window.addLinhaResistido = () => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" placeholder="Exercício" class="input-field py-1"></td>
+                <td><input type="text" class="input-field py-1 w-16"></td>
+                <td><input type="number" class="input-field py-1 w-16"></td>
+                <td><input type="text" placeholder="3x10" class="input-field py-1 w-20"></td>
+            `;
+            document.getElementById('lista-resistidos').appendChild(tr);
+        };
+
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active-tab'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            document.getElementById('btn-' + tab).classList.add('active-tab');
+        };
+        window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+    </script>
+</body>
+</html>
